@@ -20,11 +20,11 @@ app = Flask(__name__)
 
 
 
-# 设置数据库连接
+
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:@mysql:3306/bms"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# 初始化 SQLAlchemy
+
 db = SQLAlchemy(app)
 
 
@@ -134,10 +134,6 @@ def run_indexer_command_all():
 
 
 
-
-
-
-##todo 该函数为新增的，要实现修改这个总json文件的功能
 
 @app.route('/editing_json', methods=['POST'])
 def editing_json():

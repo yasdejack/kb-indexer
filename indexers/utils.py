@@ -4,12 +4,22 @@ import json
 import time
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Index
+import ssl
+import fcntl
+from dotenv import load_dotenv
 
+import pandas as pd
+
+##忽视证书
+context = ssl._create_unverified_context()    ##adding new congfig for es
 
 # Ignore warnings
 import warnings
 from elasticsearch import ElasticsearchWarning
 warnings.simplefilter('ignore', ElasticsearchWarning)
+
+
+load_dotenv() ###本地环境配置
 
 
 def read_json_file(file):
@@ -39,11 +49,16 @@ def create_es_client() -> Elasticsearch:
 
     """
     elasticsearch_host = os.environ.get('ELASTICSEARCH_HOST')
+    
+    #elasticsearch_host = 'http://elasticsearch:9201'
     if elasticsearch_host is None:
         raise ValueError('$ELASTICSEARCH_HOST is not defined.')
 
     elasticsearch_username = os.environ.get('ELASTICSEARCH_USERNAME')
     elasticsearch_password = os.environ.get('ELASTICSEARCH_PASSWORD')
+
+
+
     if elasticsearch_username and elasticsearch_password:
         http_auth = [elasticsearch_username, elasticsearch_password]
     else:
@@ -52,7 +67,9 @@ def create_es_client() -> Elasticsearch:
     es = Elasticsearch(
         hosts=[elasticsearch_host],
         http_auth=http_auth,
-        tim_out=30
+        tim_out=30,
+        scheme="https",    ##new config
+        ssl_context=context    ##new config
         )
 
     # Try to reconnect to Elasticsearch for 10 times when failing
@@ -67,7 +84,7 @@ def create_es_client() -> Elasticsearch:
             break
     if not es.ping():
         raise ValueError('[Elasticsearch] could not connect to server')
-    print(f'[Elasticsearch] connected to {elasticsearch_host}')
+    print(f'[Elasticsearch] connected change to {elasticsearch_host}')
     return es
 
 
@@ -91,6 +108,7 @@ class ElasticsearchIndexer:
             index.create()
         return index
 
+    #check if one type of data source has been indexed into es
     def is_in_index(self, field_name, value) -> bool:
         """ Check if the index contains an entry with <field_name> = <value>
 
@@ -139,3 +157,23 @@ def get_data_dir():
     if data_dir is None:
         raise ValueError('$DATA_DIR is not defined.')
     return data_dir
+
+
+def lock_file(file, mode):
+    """锁定文件"""
+    if mode == 'r':  # 读锁
+        fcntl.flock(file, fcntl.LOCK_SH)
+    elif mode == 'w':  # 写锁
+        fcntl.flock(file, fcntl.LOCK_EX)
+
+def unlock_file(file):
+    """解锁文件"""
+    fcntl.flock(file, fcntl.LOCK_UN)
+
+
+def read_csv_with_lock(file_path):
+    with open(file_path, 'r') as file:
+        lock_file(file, 'r')  # 加读锁
+        df = pd.read_csv(file)
+        unlock_file(file)  # 解锁
+    return df

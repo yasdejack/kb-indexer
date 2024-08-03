@@ -10,6 +10,7 @@ import time
 from typing import List
 from tqdm import tqdm
 from urllib.parse import quote
+from datetime import datetime
 
 from .. import utils
 
@@ -147,6 +148,7 @@ class GithubNotebookSearcher(NotebookSearcher):
                     'html_url': repo.html_url,
                     'git_url': repo.clone_url,
                     'query': query,
+                    'lastIndexingDate': datetime.now().isoformat()   ## added 
                     }
                 if new_record not in data:
                     data.append(new_record)

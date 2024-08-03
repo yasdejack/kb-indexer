@@ -33,6 +33,7 @@ def indexing_pipeline():
                 "endpointUrl": record["Endpoint Url"],
                 "sslSupprt": record["Support SSL"],
                 "logo": record["Logo"]
+                "lastIndexingDate": datetime.now().isoformat()
                 }
 
             id_ = hashlib.md5(

@@ -4,6 +4,7 @@ import pandas as pd
 
 from .. import utils
 from . import repositories
+from ..utils import read_csv_with_lock
 
 
 class Pipeline:
@@ -13,13 +14,11 @@ class Pipeline:
 
     def search(self):
         print(f'Search notebooks from {self.repo.name}')
-
-        df_queries = pd.read_csv(
-            os.path.join(
+        file_path = os.path.join(
                 os.path.dirname(__file__),
                 'data_sources/envri_queries.csv'
-                )
             )
+        df_queries = read_csv_with_lock(file_path)
         queries = df_queries['queries'].values
         self.repo.searcher().bulk_search(queries, page_range=10)
 
@@ -40,9 +39,9 @@ class Pipeline:
         data_dir = os.path.join(utils.get_data_dir(), 'notebook')
         data_dir = os.path.join(
             data_dir, self.repo.name, 'repositories_metadata')
-        self.repo.indexer('notebooks', data_dir).bulk_ingest()
+        self.repo.indexer('notebooks', data_dir).bulk_ingest()    
 
-    def run(self):
+    def run(self): ## search notebook and index them in es
         self.search()
         # self.download()
         # self.preprocess()

@@ -48,7 +48,8 @@ def run_process(command, task_id):
         update_task_status(task_id, 'running')
         process = subprocess.Popen(command, shell=True)
         try:
-            process.wait(timeout=3600)  # 超时设置为1小时
+            ##todo need to be modified
+            process.wait(timeout=3600) 
         except subprocess.TimeoutExpired:
             process.kill()
             print(f"Task {task_id} timed out and was killed")
@@ -87,7 +88,7 @@ def run_indexer_command():
         command = f"kb_indexer web pipeline"
 
 
-        #command = "python3 -m indexers.entrypoint api pipeline && python3 -m indexers.entrypoint web pipeline"    ##todo run on local
+        #command = "python3 -m indexers.entrypoint api pipeline && python3 -m indexers.entrypoint web pipeline"    #run on local
 
     elif type == 'api':
         command = f"kb_indexer api pipeline"
@@ -183,7 +184,6 @@ def editing_json():
         {'path': f'{path}/web/data_sources/ResearchInfrastructures.json', 'data': ResearchInfrastructures}
     ]
 
-    # 循环更新每个小文件
     for file_info in files_to_update:
         try:
             with open(file_info['path'], 'w') as file:
